@@ -1,0 +1,733 @@
+{
+  "name": "AI Headless Store",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chat",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        208,
+        224
+      ],
+      "id": "21ba3907-6400-42d3-ad53-3b2c7df72a5c",
+      "name": "Webhook Trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "const b = $input.first().json.body || {};\nreturn [{ json: { userText: b.message ?? '', chatId: b.session_id ?? 'anonymous' } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        224
+      ],
+      "id": "eba1c432-5ddf-4dbf-b377-f15eddbc1f5e",
+      "name": "Normalize Input"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Normalize Input').item.json.chatId }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        800,
+        448
+      ],
+      "id": "d143d0cd-c49f-4c7c-91c6-936e163519c2",
+      "name": "Chat Memory"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini-2025-04-14",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini-2025-04-14"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        640,
+        448
+      ],
+      "id": "bf4338c3-4b96-4719-a888-e7ae5db16aaa",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"reply\": $json.output } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1120,
+        224
+      ],
+      "id": "4d4b2e66-be41-40ef-91c8-37ebeba6c491",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.userText }}",
+        "options": {
+          "systemMessage": "You are an AI shopping assistant of an online clothing store (jeans, sweaters, pajamas, for men, women and kids).\n\nROLE\nHelp customers find the right product within their budget, using live store data.\n\nTASKS\n1. Understand the request: item type, audience (men/women/kids), occasion, budget. If the budget is missing, ask for it once.\n2. Always query the products tool (name, price, category, audience, status) before answering. Never rely on memory for prices or stock.\n3. Recommend 1-3 best matches within budget. For each: name, price, and one short reason.\n4. Answer questions about availability, price, and category accurately.\n5. Highlight newly added products when the customer asks what's new.\n6. If nothing fits the budget, say so honestly and suggest the closest available alternative with its price.\n7. Compare two products when asked.\n8. Remember the session context (budget, audience, preferences) within the conversation.\n\nRULES\n- Recommend only products with status \"available\".\n- Never invent products, prices, sizes, colors, or stock.\n- Off-topic questions (shipping, payment, general chat): politely say you only help with product selection.\n- Never ask for personal or payment information.\n- Reply in the customer's language (default: Arabic), in short, friendly sentences with no complex formatting.\n- End with a brief question that helps the customer decide, when useful."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        688,
+        224
+      ],
+      "id": "477f582e-4880-44a5-af8c-602c58ed96c8",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Get all available store products: name, price, category, audience. Always call before answering.",
+        "operation": "getAll",
+        "tableId": "products",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "=status",
+              "condition": "eq",
+              "keyValue": "available"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        944,
+        448
+      ],
+      "id": "bd6060c2-aed6-4b01-b686-994462d1aac2",
+      "name": "Get Products",
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "add-product",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -176,
+        -32
+      ],
+      "id": "bb40ea46-de8e-40e1-b22e-3855417b615f",
+      "name": "Webhook Trigger1"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "delete-product",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -544,
+        144
+      ],
+      "id": "726140ee-9b4e-4c75-91a9-02355c70b966",
+      "name": "Webhook Trigger2"
+    },
+    {
+      "parameters": {
+        "path": "products",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -544,
+        336
+      ],
+      "id": "15973ce6-bfee-48ed-bf5b-aab7e8383e1a",
+      "name": "Webhook Trigger3"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "tableId": "=products",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "=id",
+              "condition": "eq",
+              "keyValue": "={{ $json.body.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -288,
+        144
+      ],
+      "id": "7c99d845-a788-41d0-9f6f-72fdaa40c192",
+      "name": "Delete a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "=products",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "=id",
+              "condition": "eq",
+              "keyValue": "={{ $json.body.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "=status",
+              "fieldValue": "={{ $json.body.status }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -288,
+        512
+      ],
+      "id": "1c58838a-f0ad-495b-8ed3-c9c9d755c386",
+      "name": "Update a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "update-status",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -544,
+        512
+      ],
+      "id": "c9399fa4-b5b0-4ed0-9d25-0767b34aa40e",
+      "name": "Webhook Trigger4"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "=products",
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -288,
+        336
+      ],
+      "id": "70f9d4b0-3e6c-487f-abda-0084e8b4bb06",
+      "name": "Get many rows",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1056,
+        -32
+      ],
+      "id": "2051aac0-9d1d-485e-add5-c4bbee3426b1",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"ok\": true } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -16,
+        144
+      ],
+      "id": "c1bdc55d-cb0a-4a52-8d12-1a0cdc98dfb9",
+      "name": "Respond to Webhook2"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"products\": $input.all().map(i => i.json).filter(r => r.id) } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -16,
+        336
+      ],
+      "id": "d5b7b836-f33a-44e7-935f-a48988a61d1d",
+      "name": "Respond to Webhook3"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"ok\": true } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -16,
+        512
+      ],
+      "id": "79498889-2f30-4684-bd78-38a444ba2d8b",
+      "name": "Respond to Webhook4"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        496,
+        96
+      ],
+      "id": "6627fa3d-e2d3-4809-b9ea-d9710d03dffe",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ \"اسم المنتج: \" + $('Webhook Trigger1').item.json.body.name + \"\\nالوصف البسيط: \" + $('Webhook Trigger1').item.json.body.description + \"\\nالسعر: \" + $('Webhook Trigger1').item.json.body.price }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are a product content specialist for an online clothing store that sells jeans, sweaters, and pajamas for men, women, and kids.\n\nGiven a product name and a simple description, return ONLY a valid JSON object with these 3 fields:\n\n1. marketing_description: a professional, attractive marketing description in Arabic, 2-3 short sentences, based only on the given info. Do not invent materials, sizes, or colors that were not mentioned.\n2. category: exactly one of these values: \"جينز\" , \"كنزات\" , \"بيجامات\" , \"أخرى\"\n3. audience: exactly one of these values: \"رجال\" , \"نساء\" , \"أطفال\" , \"الكل\"\n\nReturn JSON only, no extra text, no markdown."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        496,
+        -32
+      ],
+      "id": "df592aec-1f22-4579-8c6a-3514df1b38ed",
+      "name": "Generate Product Data"
+    },
+    {
+      "parameters": {
+        "tableId": "=products",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "=name",
+              "fieldValue": "={{ $('Webhook Trigger1').item.json.body.name }}"
+            },
+            {
+              "fieldId": "=price",
+              "fieldValue": "={{ Number($('Webhook Trigger1').item.json.body.price) }}"
+            },
+            {
+              "fieldId": "=simple_description",
+              "fieldValue": "={{ $('Webhook Trigger1').item.json.body.description }}"
+            },
+            {
+              "fieldId": "=marketing_description",
+              "fieldValue": "={{ JSON.parse($json.text.replace(/```json|```/g, '').trim()).marketing_description }}"
+            },
+            {
+              "fieldId": "=category",
+              "fieldValue": "={{ JSON.parse($json.text.replace(/```json|```/g, '').trim()).category }}"
+            },
+            {
+              "fieldId": "=audience",
+              "fieldValue": "={{ JSON.parse($json.text.replace(/```json|```/g, '').trim()).audience }}"
+            },
+            {
+              "fieldId": "=status",
+              "fieldValue": "available"
+            },
+            {
+              "fieldId": "=image_url",
+              "fieldValue": "=https://YOUR_PROJECT_REF.supabase.co/storage/v1/object/public/{{ $('HTTP Request').item.json.Key }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        864,
+        -32
+      ],
+      "id": "8cc282e5-faa6-4602-a320-a873a3dbbda4",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://YOUR_PROJECT_REF.supabase.co/storage/v1/object/product-images/{{ $now.toMillis() }}.jpg",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "image/jpeg"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "image",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        288,
+        -32
+      ],
+      "id": "92506713-532d-4923-8405-a89df3ba5bb2",
+      "name": "HTTP Request",
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "resize",
+        "dataPropertyName": "image",
+        "width": 800,
+        "height": 800,
+        "resizeOption": "onlyIfLarger",
+        "options": {
+          "format": "jpeg",
+          "quality": 80
+        }
+      },
+      "type": "n8n-nodes-base.editImage",
+      "typeVersion": 1.1,
+      "position": [
+        80,
+        -32
+      ],
+      "id": "a4942cb1-da59-47dc-9ead-ba64da1ffb3f",
+      "name": "Edit Image"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Normalize Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Input": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Products": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete a row": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Edit Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger2": {
+      "main": [
+        [
+          {
+            "node": "Delete a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger3": {
+      "main": [
+        [
+          {
+            "node": "Get many rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger4": {
+      "main": [
+        [
+          {
+            "node": "Update a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many rows": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a row": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate Product Data",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Product Data": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook1": {
+      "main": [
+        []
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Generate Product Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Image": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "meta": {},
+  "nodeGroups": [],
+  "tags": []
+}

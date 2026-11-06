@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>خيط | متجر الأزياء الذكي</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#16212b;--denim:#1d3557;--sky:#e8eef6;--gold:#e0a526;--bg:#f7f8fa;--card:#fff;--line:#dfe4ea;--ok:#2b8a57;--bad:#c0392b}
+*{box-sizing:border-box;margin:0}
+body{font-family:"IBM Plex Sans Arabic",Tahoma,sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+a{color:inherit;text-decoration:none}
+button,input,select,textarea{font:inherit}
+header{background:var(--denim);color:#fff;position:sticky;top:0;z-index:5}
+.bar{max-width:1100px;margin:auto;padding:12px 16px;display:flex;align-items:center;gap:16px;justify-content:space-between}
+.logo{font-size:1.5rem;font-weight:700;letter-spacing:.02em}
+nav a{padding:6px 12px;border-radius:6px;opacity:.85}
+nav a.on{background:rgba(255,255,255,.15);opacity:1}
+main{max-width:1100px;margin:auto;padding:20px 16px 90px}
+.hero{background:var(--denim);color:#fff;border-radius:14px;padding:32px 24px;margin-bottom:20px;background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.04) 0 2px,transparent 2px 10px)}
+.hero h1{font-size:clamp(1.5rem,4vw,2.3rem);line-height:1.3}
+.hero p{opacity:.8;margin-top:8px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}
+.chip{border:1px solid var(--line);background:var(--card);padding:6px 14px;border-radius:99px;cursor:pointer}
+.chip.on{background:var(--denim);color:#fff;border-color:var(--denim)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
+.card img{width:100%;aspect-ratio:4/5;object-fit:cover;background:var(--sky)}
+.card .b{padding:12px;display:flex;flex-direction:column;gap:6px;flex:1}
+.card h3{font-size:1rem}
+.card p{font-size:.85rem;color:#556;flex:1}
+.price{font-weight:700;color:var(--denim)}
+.tag{font-size:.75rem;background:var(--sky);color:var(--denim);padding:2px 8px;border-radius:4px;width:fit-content}
+.out{opacity:.55}
+.badge{font-size:.75rem;padding:2px 8px;border-radius:4px;color:#fff;background:var(--ok);width:fit-content}
+.badge.no{background:var(--bad)}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:20px}
+.panel h2{font-size:1.15rem;margin-bottom:12px}
+label{display:block;font-size:.85rem;margin:10px 0 4px;font-weight:500}
+input,select,textarea{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:#fff}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.btn{background:var(--denim);color:#fff;border:0;padding:10px 18px;border-radius:8px;cursor:pointer;margin-top:14px}
+.btn:disabled{opacity:.5}
+.btn.sm{padding:5px 10px;margin:0;font-size:.8rem}
+.btn.gold{background:var(--gold);color:var(--ink)}
+.btn.red{background:var(--bad)}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th,td{padding:8px;border-bottom:1px solid var(--line);text-align:right;vertical-align:middle}
+td img{width:44px;height:44px;object-fit:cover;border-radius:6px}
+.tw{overflow-x:auto}
+.empty{text-align:center;padding:40px;color:#778}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:8px;display:none;z-index:30}
+#fab{position:fixed;bottom:18px;left:18px;width:58px;height:58px;border-radius:50%;background:var(--gold);border:0;font-size:1.6rem;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.25);z-index:20}
+#chat{position:fixed;bottom:88px;left:18px;width:min(360px,calc(100vw - 36px));height:min(480px,70vh);background:#fff;border:1px solid var(--line);border-radius:14px;display:none;flex-direction:column;overflow:hidden;z-index:20;box-shadow:0 8px 30px rgba(0,0,0,.2)}
+#chat.open{display:flex}
+#chat .h{background:var(--denim);color:#fff;padding:12px 14px;font-weight:700}
+#msgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;background:var(--bg)}
+.m{max-width:85%;padding:8px 12px;border-radius:12px;font-size:.9rem;white-space:pre-wrap}
+.m.u{background:var(--denim);color:#fff;align-self:flex-start}
+.m.a{background:#fff;border:1px solid var(--line);align-self:flex-end}
+#chat form{display:flex;gap:6px;padding:10px;border-top:1px solid var(--line)}
+#chat form button{margin:0;padding:8px 14px}
+.demo{background:#fff6dd;border:1px solid var(--gold);padding:8px 14px;border-radius:8px;font-size:.85rem;margin-bottom:14px}
+@media(max-width:560px){.row{grid-template-columns:1fr}.grid{grid-template-columns:repeat(2,1fr);gap:10px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+</style>
+</head>
+<body>
+<header><div class="bar"><a class="logo" href="#/">خيط</a><nav><a href="#/" id="n1">المتجر</a><a href="#/admin" id="n2">لوحة الإدارة</a></nav></div></header>
+<main id="app"></main>
+<div id="toast" role="status"></div>
+<button id="fab" aria-label="فتح المساعد الذكي">💬</button>
+<section id="chat" aria-label="المساعد الذكي">
+  <div class="h">مساعد خيط</div>
+  <div id="msgs"></div>
+  <form id="cf"><input id="ci" placeholder="مثال: عندي ميزانية 50 دولار لبيجامة" autocomplete="off"><button class="btn">إرسال</button></form>
+</section>
+
+<script>
+/* ===== n8n connection =====
+   Set N8N_BASE to your n8n production webhook base URL, e.g. "https://your-n8n.example.com/webhook".
+   Leave it empty to run in demo mode (data kept in the browser, no n8n needed). */
+const N8N_BASE = "";
+const EP = {
+  list:   ["GET",  "/products"],
+  add:    ["POST", "/add-product"],     // multipart: name, price, description, image
+  status: ["POST", "/update-status"],   // json: {id, status}
+  remove: ["POST", "/delete-product"],  // json: {id}
+  chat:   ["POST", "/chat"]  // json: {message, session_id} -> {reply}
+};
+/* شكل المنتج المتوقع من n8n:
+   {id, name, price, simple_description, marketing_description, category, audience, image_url, status:"available"|"unavailable"} */
+
+const DEMO = !N8N_BASE && !EP.list[1].startsWith("http");
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const sid = (localStorage.sid ||= "s" + Math.random().toString(36).slice(2));
+const AUD = {men:"رجال", women:"نساء", kids:"أطفال"};
+let products = [], filter = "الكل";
+
+function toast(t){const e=$("#toast");e.textContent=t;e.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display="none",2800)}
+
+/* ---------- طبقة البيانات ---------- */
+const svg = (t,c) => "data:image/svg+xml;utf8," + encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='400' height='500'><rect width='400' height='500' fill='${c}'/><text x='200' y='260' font-size='28' text-anchor='middle' fill='#fff' font-family='sans-serif'>${t}</text></svg>`);
+const SEED = [
+  {id:1,name:"جينز مستقيم",price:45,marketing_description:"جينز قطني بقصّة مستقيمة مريحة، يناسب الإطلالات اليومية.",category:"جينزات",audience:"رجال",image_url:svg("جينز","#1d3557"),status:"available"},
+  {id:2,name:"كنزة صوف",price:38,marketing_description:"كنزة دافئة بنسيج ناعم، خيارك الأول لأيام الشتاء.",category:"كنزات",audience:"نساء",image_url:svg("كنزة","#8a5a44"),status:"available"},
+  {id:3,name:"بيجامة قطن للأطفال",price:22,marketing_description:"بيجامة قطنية خفيفة بألوان مرحة لنوم هادئ.",category:"بيجامات",audience:"أطفال",image_url:svg("بيجامة","#4f8a8b"),status:"unavailable"}
+];
+const store = {
+  get(){ try{return JSON.parse(localStorage.demo)}catch{return null} },
+  set(v){ localStorage.demo = JSON.stringify(v) }
+};
+async function call(key, body){
+  const [method, path] = EP[key];
+  const opt = {method, headers:{"ngrok-skip-browser-warning":"1"}};
+  if (body instanceof FormData) opt.body = body;
+  else if (body){ opt.headers["Content-Type"] = "application/json"; opt.body = JSON.stringify(body) }
+  const r = await fetch(path.startsWith("http") ? path : N8N_BASE + path, opt);
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  return r.json();
+}
+const normalize = p => ({...p, id:p.id ?? p.row_number, status:(p.status||"available")});
+
+async function load(){
+  if (DEMO){ products = store.get() || (store.set(SEED), SEED); return }
+  const d = await call("list");
+  const arr = Array.isArray(d) ? d : (d.products || d.data || []);
+  products = arr.map(normalize).sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+}
+function shrink(file){ // ضغط الصورة في الوضع التجريبي فقط
+  return new Promise(res => {
+    const im = new Image(); im.onload = () => {
+      const k = Math.min(1, 500 / im.width), c = document.createElement("canvas");
+      c.width = im.width*k; c.height = im.height*k;
+      c.getContext("2d").drawImage(im,0,0,c.width,c.height); res(c.toDataURL("image/jpeg",.7));
+    }; im.src = URL.createObjectURL(file);
+  });
+}
+async function addProduct(fd){
+  if (!DEMO) {
+    const f = fd.get("image");
+    const im = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = URL.createObjectURL(f); });
+    const k = Math.min(1, 1000 / im.width), c = document.createElement("canvas");
+    c.width = im.width * k; c.height = im.height * k;
+    c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
+    const blob = await new Promise(r => c.toBlob(r, "image/jpeg", 0.8));
+    fd.set("image", blob, "product.jpg");
+    return call("add", fd);
+  }
+  const cat = ["جينز","كنزة","بيجامة"].find(c => fd.get("name").includes(c)) || "ملابس";
+  const p = {id:Date.now(),name:fd.get("name"),price:+fd.get("price"),simple_description:fd.get("description"),
+    marketing_description:"(وصف تجريبي) " + fd.get("description"),category:cat,audience:"الكل",
+    image_url:await shrink(fd.get("image")),status:"available"};
+  products.unshift(p); store.set(products); return p;
+}
+async function setStatus(id,status){
+  if (!DEMO) await call("status",{id,status});
+  const p = products.find(x=>x.id==id); p.status = status; DEMO && store.set(products);
+}
+async function removeProduct(id){
+  if (!DEMO) await call("remove",{id});
+  products = products.filter(x=>x.id!=id); DEMO && store.set(products);
+}
+
+/* ---------- الواجهات ---------- */
+const demoNote = () => DEMO ? `<div class="demo">وضع تجريبي: البيانات محفوظة في متصفحك فقط. ضع رابط n8n في <b>N8N_BASE</b> لتفعيل الربط الحقيقي.</div>` : "";
+
+function cardHtml(p){
+  const av = p.status === "available";
+  return `<article class="card ${av?"":"out"}"><img src="${esc(p.image_url)}" alt="${esc(p.name)}" loading="lazy">
+  <div class="b"><span class="tag">${esc(p.category)}${p.audience&&p.audience!=="الكل"?" · "+esc(p.audience):""}</span>
+  <h3>${esc(p.name)}</h3><p>${esc(p.marketing_description)}</p>
+  <div class="price">${esc(p.price)}$</div><span class="badge ${av?"":"no"}">${av?"متوفر":"غير متوفر"}</span></div></article>`;
+}
+function renderStore(){
+  const cats = ["الكل", ...new Set(products.map(p=>p.category).filter(Boolean))];
+  const list = products.filter(p => filter==="الكل" || p.category===filter);
+  $("#app").innerHTML = `${demoNote()}
+  <section class="hero"><h1>ملابس تناسبك، واختيارات يقترحها مساعد ذكي</h1><p>أخبر المساعد بميزانيتك وسيقترح عليك الأنسب من المتوفر الآن.</p></section>
+  <div class="chips">${cats.map(c=>`<button class="chip ${c===filter?"on":""}" data-c="${esc(c)}">${esc(c)}</button>`).join("")}</div>
+  ${list.length ? `<div class="grid">${list.map(cardHtml).join("")}</div>` : `<div class="empty">لا توجد منتجات في هذه الفئة بعد.</div>`}`;
+  document.querySelectorAll(".chip").forEach(b => b.onclick = () => { filter = b.dataset.c; renderStore() });
+}
+function renderAdmin(){
+  $("#app").innerHTML = `${demoNote()}
+  <section class="panel"><h2>إضافة منتج جديد</h2>
+   <form id="af">
+    <div class="row"><div><label for="an">اسم المنتج</label><input id="an" name="name" required></div>
+    <div><label for="ap">السعر ($)</label><input id="ap" name="price" type="number" min="0" step="0.01" required></div></div>
+    <label for="ad">وصف بسيط</label><textarea id="ad" name="description" rows="2" required placeholder="مثال: بنطلون جينز أزرق للرجال"></textarea>
+    <label for="ai">صورة المنتج</label><input id="ai" name="image" type="file" accept="image/*" required>
+    <button class="btn" id="ab">إضافة</button>
+   </form></section>
+  <section class="panel"><h2>المنتجات (${products.length})</h2>
+   ${products.length ? `<div class="tw"><table><thead><tr><th></th><th>الاسم</th><th>الفئة</th><th>السعر</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody>
+   ${products.map(p=>`<tr><td><img src="${esc(p.image_url)}" alt=""></td><td>${esc(p.name)}</td><td>${esc(p.category)}</td><td>${esc(p.price)}$</td>
+   <td><span class="badge ${p.status==="available"?"":"no"}">${p.status==="available"?"متوفر":"غير متوفر"}</span></td>
+   <td><button class="btn sm gold" data-t="${esc(p.id)}">تغيير الحالة</button> <button class="btn sm red" data-d="${esc(p.id)}">حذف</button></td></tr>`).join("")}
+   </tbody></table></div>` : `<div class="empty">لا توجد منتجات. أضف أول منتج من النموذج أعلاه.</div>`}</section>`;
+  $("#af").onsubmit = async e => {
+    e.preventDefault(); const b = $("#ab"); b.disabled = true; b.textContent = "جارٍ المعالجة بالذكاء الاصطناعي...";
+    try { await addProduct(new FormData(e.target)); await load(); toast("تمت إضافة المنتج"); renderAdmin(); }
+    catch(err){ toast("تعذّرت الإضافة: " + err.message); b.disabled = false; b.textContent = "إضافة" }
+  };
+  document.querySelectorAll("[data-t]").forEach(b => b.onclick = async () => {
+    const p = products.find(x=>x.id==b.dataset.t);
+    try { await setStatus(p.id, p.status==="available"?"unavailable":"available"); toast("تم تحديث الحالة"); renderAdmin() } catch(e){ toast("تعذّر التحديث: "+e.message) }
+  });
+  document.querySelectorAll("[data-d]").forEach(b => b.onclick = async () => {
+    if (!confirm("حذف هذا المنتج نهائياً؟")) return;
+    try { await removeProduct(b.dataset.d); toast("تم الحذف"); renderAdmin() } catch(e){ toast("تعذّر الحذف: "+e.message) }
+  });
+}
+
+/* ---------- الشات بوت ---------- */
+function say(t,who){const d=document.createElement("div");d.className="m "+who;d.textContent=t;$("#msgs").append(d);$("#msgs").scrollTop=1e9;return d}
+function demoReply(q){
+  const n = +(q.match(/\d+/)||[])[0]; const av = products.filter(p=>p.status==="available");
+  const hit = av.filter(p => (!n || p.price<=n));
+  if (!hit.length) return "لا يوجد حالياً منتج متوفر ضمن هذه الميزانية.";
+  return "أقترح عليك:\n" + hit.slice(0,3).map(p=>`• ${p.name} بسعر ${p.price}$`).join("\n");
+}
+async function ask(q){
+  if (!EP.chat[1].startsWith("http") && DEMO){ await load(); return demoReply(q) }
+  const d = await call("chat",{message:q,session_id:sid});
+  return d.reply || d.output || d.text || "لم أتمكن من الرد.";
+}
+$("#fab").onclick = () => { $("#chat").classList.toggle("open"); if(!$("#msgs").children.length) say("أهلاً! أخبرني بميزانيتك أو بما تبحث عنه وسأقترح عليك الأنسب.","a") };
+$("#cf").onsubmit = async e => {
+  e.preventDefault(); const q = $("#ci").value.trim(); if(!q) return;
+  $("#ci").value = ""; say(q,"u"); const w = say("...","a");
+  try { w.textContent = await ask(q) } catch(err){ w.textContent = "تعذّر الاتصال بالمساعد. حاول مجدداً." }
+};
+
+/* ---------- التوجيه ---------- */
+async function route(){
+  const admin = location.hash.startsWith("#/admin");
+  $("#n1").className = admin ? "" : "on"; $("#n2").className = admin ? "on" : "";
+  $("#app").innerHTML = `<div class="empty">جارٍ التحميل...</div>`;
+  try { await load() } catch(e){ products = []; toast("تعذّر جلب المنتجات من n8n") }
+  admin ? renderAdmin() : renderStore();
+}
+addEventListener("hashchange", route); route();
+</script>
+</body>
+</html>
